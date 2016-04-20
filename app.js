@@ -1,3 +1,4 @@
+'use strict'
 const readLine = require('readline');
 const fs = require('fs');
 
@@ -22,18 +23,23 @@ rll.on('line', line => {
 
 rlp.on('pause', () => {
     rll.on('pause', () => {
-        var outFile = fs.createWriteStream('result.txt');
+        let outFile = fs.createWriteStream('result.txt');
         
-        for(var i = 0; i < products.length; i++) {
-            var man = products[i].manufacturer;
-            var model = products[i].model;
-            var tmpList = [];
+        for(let i = 0; i < products.length; i++) {
+            let man = products[i]['manufacturer'];
+            let model = products[i]['model'];
+            let tmpList = [];
 
             listings.forEach((item, index, arr) => {
-                if(item.manufacturer.toLowerCase() === man.toLowerCase()) {
-                    if(item.title.toLowerCase().includes(model.toLowerCase())) {
-                        tmpList.push(item);
-//                        arr.splice(index, 1);
+                if(item['manufacturer'].toLowerCase() === man.toLowerCase()) {
+                    let title = item['title'].toLowerCase();
+                    let pos = title.indexOf(model.toLowerCase());
+
+                    if (pos !== -1) {
+                        if (title.charAt(pos + model.length).match(/[\s\-\._!,A-z]/) && !title.charAt(pos - 1).match(/\d|\w/)) {
+                            tmpList.push(item);
+                            arr.splice(index, 1);
+                        }
                     }
                 }
             });
@@ -44,12 +50,14 @@ rlp.on('pause', () => {
              * "listings": Array[Listing]
              * }
              */
-            var obj = {
+            let obj = {
                 'product_name': products[i]['product_name'],
                 'listings': tmpList
             };
             
-            outFile.write(JSON.stringify(obj) + '\n');
+            if (obj.listings.length > 0) {
+                outFile.write(JSON.stringify(obj) + '\n');
+            }
         }
         
         outFile.end();
